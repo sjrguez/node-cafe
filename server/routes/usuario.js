@@ -1,10 +1,15 @@
 const express = require('express');
 const app = express();
-let Usuario = require("../models/usuarios")
 const bcrypt = require('bcrypt');
 const _ = require("underscore")
 
-app.get('/usuario', function(req, res) {
+
+let Usuario = require("../models/usuarios")
+const { verificarToken, verificarAdmin_Role } = require("../middlewares/autenticacion")
+
+
+app.get('/usuario', verificarToken, (req, res) => {
+
 
     let desde = req.query.desde || 0
     desde = Number(desde)
@@ -34,7 +39,7 @@ app.get('/usuario', function(req, res) {
 
 
 
-app.post('/usuario', function(req, res) {
+app.post('/usuario', [verificarToken, verificarAdmin_Role], (req, res) => {
 
     let body = req.body;
 
@@ -59,13 +64,13 @@ app.post('/usuario', function(req, res) {
     })
 });
 
-app.put('/usuario/:id', function(req, res) {
+app.put('/usuario/:id', [verificarToken, verificarAdmin_Role], (req, res) => {
 
     let id = req.params.id;
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado'])
 
 
-    Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (error, usuarioDB) => {
+    Usuario.findByIdAndUpdate(id, body, { new: true }, (error, usuarioDB) => {
 
         if (error) {
             res.status(400).json({
@@ -82,11 +87,9 @@ app.put('/usuario/:id', function(req, res) {
 
 });
 
-app.delete('/usuario/:id', function(req, res) {
+app.delete('/usuario/:id', [verificarToken, verificarAdmin_Role], (req, res) => {
 
     let id = req.params.id
-
-
 
 
     // Usuario.findByIdAndRemove(id, (error, usuarioBorrado) => {
